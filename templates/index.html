@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image to 3D Image Generator</title>
+{% load static %}
+<link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+<!-- <form id="imageForm">
+    <div id="dropzone">Drag and drop an image here</div>
+
+    <label for="imageInput">Choose an image:</label>
+    <input type="file" id="imageInput" name="image" style="display: none;">
+    <label for="imageInput" id="browseButton">Browse</label>
+
+    <label for="user_prompt">Prompt:</label>
+    <input type="text" id="user_prompt">
+
+    <label for="color">Color:</label>
+    <select id="color">
+        <option value="red">Red</option>
+        <option value="blue">Blue</option>
+        <option value="green">Green</option>
+    </select>
+
+    <label for="size">Size:</label>
+    <select id="size">
+        <option value="small">Small</option>
+        <option value="medium">Medium</option>
+        <option value="large">Large</option>
+    </select>
+
+    <label for="style">Style:</label>
+    <select id="style">
+        <option value="modern">Modern</option>
+        <option value="classic">Classic</option>
+        <option value="vintage">Vintage</option>
+    </select>
+
+    <button type="submit">Generate 3D Image</button>
+</form> -->
+<main>
+    <form method="post" enctype="multipart/form-data">
+        <div id="dropzone">Drag and drop an image here</div>
+        {% csrf_token %}
+        {{ form.image }}
+
+        <div id="form-grid">
+            <label for="id_prompt"> Prompt: </label>
+            {{ form.prompt }}
+
+            <label for="id_quality"> Quality: </label>
+            {{ form.quality }}
+
+            <label for="id_size"> Size: </label>
+            {{ form.size }}
+
+            <label for="id_style"> Style: </label>
+            {{ form.style }}
+        </div>
+
+        <button type="submit">Generate 3D Image</button>
+    </form>
+    {% if images %}
+    <div id="response">
+        {% for i in images %}
+        {% with img=i %}
+            <img src="{{ img.url }}"/>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</main>
+
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const image_upload = document.getElementById('id_image');
+    const imageForm = document.getElementById('imageForm');
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.style.backgroundColor = '#f0f0f0';
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.style.backgroundColor = '';
+    });
+
+    dropzone.addEventListener('click', (e) => image_upload.click());
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const dropped_files = e.dataTransfer.files;
+        dropzone.style.backgroundColor = '';
+
+        const file = dropped_files[0];
+
+        if (dropped_files.length != 1) {
+            alert("Only one file allowed")
+        }
+        else {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size exceeds 5MB limit');
+                image_upload.files = [];
+            }
+            else {
+                let f = new DataTransfer();
+                f.items.add(file);
+                image_upload.files = f.files;
+                dropzone.innerText = file.name;
+            }
+        }
+
+    });
+</script>
+</body>
+</html>

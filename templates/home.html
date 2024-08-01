@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perodua</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.1/css/all.min.css'>
+    <style>
+
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.6.0/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <style>
+        .qr-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .qr-image {
+            margin-top: 20px;
+            display: none;
+            /* Hide the image initially */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="landing-screen">
+        <img src="{% static 'images/white-logo.png' %}" alt="">
+        <h2>Welcome to AI Sketch</h2>
+        <a href="#drawPanel">Start</a>
+    </div>
+    <hr>
+    <div class="draw-sketch" id="drawPanel">
+        <div class="left-panel">
+            <img src="{% static 'images/white-logo.png' %}" alt="">
+            {% if ai_image_url %}
+            <h2>Scan the QR code to download the image</h2>
+            <div class="qr-container">
+            </div>
+            {% endif %}
+
+            <script>
+                let qr_container = document.querySelector(".qr-container");
+                let canvas_w = qr_container.clientWidth || 200;
+                let canvas_h = qr_container.clientHeight || 200;
+
+                // Create a new canvas element
+                let canvas = document.createElement('canvas');
+                canvas.id = 'qrcode';
+                canvas.width = canvas_w;
+                canvas.height = canvas_h;
+
+                // Append the canvas to the qr-container
+                qr_container.appendChild(canvas);
+
+                const url = "{{ai_image_url}}";
+
+                QRCode.toCanvas(canvas, url, {
+                    width: canvas_w,
+                    height: canvas_h
+                }, function (error) {
+                    if (error) console.error(error);
+                    console.log('QR code successfully generated!');
+                });
+            </script>
+        </div>
+        <div class="center-panel">
+            {% if images %}
+            <div class="ai-images">
+                {% for i in images %}
+                {% with img=i %}
+                <img src="{{ img.url }}" />
+                {% endwith %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div id="canvas"></div>
+            {% endif %}
+
+            <div class="tool-panel">
+                <div id="tools">
+                    <div class="tool tool-selected"><i class="fas fa-paint-brush"></i></div>
+                    <div style="display: none;" class="tool"><i class="fas fa-square-full"></i></div>
+                    <div style="display: none;" class="tool"><i class="fas fa-circle"></i></div>
+                    <div class="tool"><i class="fas fa-eraser"></i></div>
+                    <!-- <div class="tool" id="undo"><i class="fas fa-undo"></i></div> -->
+                    <!-- <div class="tool" id="redo"><i class="fas fa-redo"></i></div> -->
+
+
+                    <!-- <div class="option" id="size-selector"><i class="fas fa-sliders-h"></i></div> -->
+                    <div class="option" id="color-selector"></div>
+                    <!-- <div class="option" id="download"><i class="fas fa-cloud-download-alt"></i></div> -->
+                    <!-- <div id="sliders-wrapper">
+                        <input type="color" id="color-input" oninput="refreshColorPicker()" value="#32323c">
+                    </div> -->
+                    <!-- <input type="range" value="20" min="0" max="255" id="radius-range"> -->
+
+                </div>
+                <div id="color-picker" class="pane">
+
+                    <div class="picker-titlebar">
+                        <h2>Choose a color</h2>
+                        <i class="fas fa-times close-picker" id="close-color-picker"></i>
+                    </div>
+
+                    <div id="sliders-wrapper">
+                        <span>R</span>
+                        <input type="range" class="color-range" value="50" min="0" max="255">
+                        <span>G</span>
+                        <input type="range" class="color-range" value="50" min="0" max="255">
+                        <span>B</span>
+                        <input type="range" class="color-range" value="60" min="0" max="255">
+                    </div>
+
+                </div>
+                <div id="size-picker" class="pane">
+
+                    <div class="picker-titlebar">
+                        <h2>Settings</h2>
+                        <i class="fas fa-times close-picker" id="close-size-picker"></i>
+                    </div>
+
+                    <div id="sliders-wrapper">
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="btn-box">
+                <a href="/" class="refresh-btn">Refresh</a>
+            </div>
+            <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js'></script>
+            <script>
+                /*** GUI Part ***/
+                var tool = 0
+                var tools = document.querySelectorAll(".tool")
+                var drawColor = null
+                var radius = 5
+                var graphicHistory = [];
+                var currentGraphicIndex = -1;
+
+                setColor([50, 50, 60])
+
+
+                for (var i = 0; i < tools.length; i++) {
+                    tools[i].onclick = function (id) {
+                        return function () {
+                            setTool(id)
+                        }
+                    }(i)
+                }
+
+                function setTool(id) {
+                    tool = id
+                    for (var i = 0; i < tools.length; i++) {
+                        tools[i].classList.remove("tool-selected")
+                        if (id == i)
+                            tools[i].classList.add("tool-selected")
+                    }
+                }
+
+                function setColor(c) {
+                    drawColor = c
+
+                }
+
+                document.onwheel = function (e) {
+                    if (e.deltaY < 0)
+                        radius += 2
+                    if (e.deltaY > 0)
+                        radius -= 2
+                }
+
+                // document.querySelector("#download").onclick = function () {
+                //     graphic.save("Drawing.png")
+                // }
+                document.querySelector("#color-selector").onclick = function () {
+                    document.querySelector("#color-picker").classList.add("open")
+                }
+                document.querySelector("#close-color-picker").onclick = function () {
+                    document.querySelector("#color-picker").classList.remove("open")
+                }
+                // document.querySelector("#size-selector").onclick = function () {
+                //     document.querySelector("#size-picker").classList.add("open")
+                // }
+                // document.querySelector("#close-size-picker").onclick = function () {
+                //     document.querySelector("#size-picker").classList.remove("open")
+                // }
+                // document.querySelector("#color-input").addEventListener('input', refreshColorPicker);
+                // document.querySelector("#radius-range").oninput = refreshRadius
+                function refreshColorPicker() {
+                    const hexColor = document.querySelector("#color-input").value;
+                    const r = parseInt(hexColor.substr(1, 2), 16);
+                    const g = parseInt(hexColor.substr(3, 2), 16);
+                    const b = parseInt(hexColor.substr(5, 2), 16);
+                    setColor([r, g, b]);
+                }
+                function refreshRadius() {
+                    radius = parseInt(document.querySelector("#radius-range").value)
+                }
+                /*** Drawing part ***/
+                var lastPoint = null
+                var graphic = null
+
+                var squareOrigin = null
+                var circleOrigin = null
+
+                function setup() {
+                    panel = document.querySelector(".center-panel")
+                    canvasWidth = panel.clientWidth
+                    canvasHeight = panel.clientHeight
+
+                    createCanvas(canvasWidth, canvasHeight).parent("#canvas")
+                    ellipseMode(CENTER)
+                    graphic = createGraphics(canvasWidth, canvasHeight)
+                    graphic.background(255)
+
+
+                    // Store the initial graphic in the history
+                    graphicHistory.push(graphic.get());
+                }
+                function draw() {
+                    background(255)
+                    image(graphic, 0, 0)
+
+                    if (tool == 0 || tool == 3)
+                        tool0Preview()
+
+                    if (mouseIsPressed) {
+                        if (!document.querySelector("#color-picker").classList.contains("open") && !document.querySelector("#size-picker").classList.contains("open"))
+                            drawOnGraphic()
+                    } else {
+                        lastPoint = null
+                        onMouseQuit()
+                    }
+
+                }
+
+                function tool0Preview() {
+                    noFill()
+                    stroke(200)
+                    strokeWeight(2)
+                    ellipse(mouseX, mouseY, radius, radius)
+                }
+
+                function drawOnGraphic() {
+                    if (lastPoint == null)
+                        lastPoint = [mouseX, mouseY]
+
+                    if (tool == 0) {
+                        graphic.noFill()
+                        graphic.stroke(drawColor)
+                        graphic.strokeWeight(radius)
+                        graphic.line(mouseX, mouseY, lastPoint[0], lastPoint[1])
+                    }
+
+                    if (tool == 1) {
+                        if (squareOrigin == null) {
+                            squareOrigin = [mouseX, mouseY]
+                        } else {
+                            fill([drawColor[0], drawColor[1], drawColor[2], 122])
+                            noStroke()
+                            rect(squareOrigin[0], squareOrigin[1], mouseX - squareOrigin[0], mouseY - squareOrigin[1])
+                        }
+                    }
+
+                    if (tool == 2) {
+                        if (circleOrigin == null) {
+                            circleOrigin = [mouseX, mouseY]
+                        } else {
+                            fill([drawColor[0], drawColor[1], drawColor[2], 122])
+                            noStroke()
+                            let d = createVector(mouseX - circleOrigin[0], mouseY - circleOrigin[1]).mag()
+                            ellipseMode(CENTER)
+                            ellipse(circleOrigin[0], circleOrigin[1], d * 2, d * 2)
+                        }
+                    }
+
+                    if (tool == 3) {
+                        graphic.noFill()
+                        graphic.stroke(255)
+                        graphic.strokeWeight(radius)
+                        graphic.line(mouseX, mouseY, lastPoint[0], lastPoint[1])
+                    }
+
+                    lastPoint = [mouseX, mouseY]
+                    if (currentGraphicIndex < graphicHistory.length - 1) {
+                        graphicHistory.splice(currentGraphicIndex + 1);
+                    }
+                    graphicHistory.push(graphic.get());
+                    currentGraphicIndex++;
+                }
+
+                function onMouseQuit() {
+                    if (squareOrigin != null) {
+                        graphic.fill(drawColor)
+                        graphic.noStroke()
+                        graphic.rect(squareOrigin[0], squareOrigin[1], mouseX - squareOrigin[0], mouseY - squareOrigin[1])
+                        squareOrigin = null
+                    }
+                    if (circleOrigin != null) {
+                        graphic.fill(drawColor)
+                        graphic.noStroke()
+                        let d = createVector(mouseX - circleOrigin[0], mouseY - circleOrigin[1]).mag()
+                        graphic.ellipseMode(CENTER)
+                        graphic.ellipse(circleOrigin[0], circleOrigin[1], d * 2, d * 2)
+                        circleOrigin = null
+                    }
+                    // Add this code here
+                    if (currentGraphicIndex < graphicHistory.length - 1) {
+                        graphicHistory.splice(currentGraphicIndex + 1);
+                    }
+                    graphicHistory.push(graphic.get());
+                    currentGraphicIndex++;
+                }
+                function undo() {
+                    if (currentGraphicIndex > 0) {
+                        console.log(graphic.get())
+                        currentGraphicIndex--;
+                        graphic.background(255);
+                        graphic.image(graphicHistory[currentGraphicIndex], 0, 0); // Draw the previous state
+                        // Clear the canvas by setting the background color to white
+                        // graphic.image(graphicHistory[currentGraphicIndex], 0, 0);
+                    }
+                }
+                function redo() {
+                    if (currentGraphicIndex < graphicHistory.length - 1) {
+                        currentGraphicIndex++;
+                        graphic.background(255);
+                    }
+                }
+                // Add undo and redo buttons
+                document.querySelector("#undo").onclick = function () {
+                    undo();
+                };
+
+                document.querySelector("#redo").onclick = function () {
+                    redo();
+                };
+
+            </script>
+        </div>
+        <div class="right-panel">
+            <h3>Create</h3>
+            <hr>
+            <p>Choose your prompt from list</p>
+            <div class="style">
+                <div class="dropdown">
+                    <button class="dropdown-toggle">
+                        <span class="dropdown-toggle-text" id="promptData">Select Style</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li class="active">Design a Car! Draw a car and send us your picture. We'll turn it into a
+                            sports
+                            car or SUV!</li>
+                        <li>Draw and Watch! Send us your car drawing. See it become a cool sports car or SUV!</li>
+                        <li>Magic Car! Draw a car, send it, and watch it change into a sports car or SUV!</li>
+                        <li>Car Adventure! Draw a car, send it to us, and see it become a sports car or SUV!</li>
+                        <li>Your Car, Our Magic! Draw a car, send it, and we'll make it a sports car or SUV!</li>
+                    </ul>
+                </div>
+                <!-- <div class="dropdown">
+                    <button class="dropdown-toggle">
+                        <img src="{% static 'images/p1.jpeg' %}" alt="" class="dropdown-toggle-img">
+                        <span class="dropdown-toggle-text">Select Style</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li data-style="natural" class="active" data-img="{% static 'images/p1.jpeg' %}"><img
+                                src="{% static 'images/p1.jpeg' %}" alt="">Natural</li>
+                        <li data-style="vivid" data-img="{% static 'images/p2.jpeg' %}"><img
+                                src="{% static 'images/p2.jpeg' %}" alt="">Vivid</li>
+                    </ul>
+                </div> -->
+            </div>
+            <br>
+            <hr>
+            <div class="submit-box">
+                <h2>Are you ready to submit?</h2>
+                <div class="tool" id="upload">Upload</div>
+
+            </div>
+
+
+        </div>
+    </div>
+
+    <form style="display: none;" method="post" action="{% url 'imagegen' %}" enctype="multipart/form-data" id="ai_form">
+        {% csrf_token %}
+        <input type="file" name="image" id="id_image">
+        <input type="text" name="prompt" id="promptInput">
+
+        <button type="submit" id="genImageBtn">Generate 3D Image</button>
+    </form>
+
+
+    <script>
+        // Select all list items
+        const items = document.querySelectorAll('.prompts li');
+
+        // Add click event listener to each item
+        items.forEach(item => {
+            item.addEventListener('click', function () {
+                // Remove 'active' class from all items
+                items.forEach(i => i.classList.remove('active'));
+                // Add 'active' class to the clicked item
+                this.classList.add('active');
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleButton = document.querySelector('.dropdown-toggle');
+            const menu = document.querySelector('.dropdown-menu');
+            const items = menu.querySelectorAll('li');
+            const toggleText = toggleButton.querySelector('.dropdown-toggle-text');
+
+            // Function to update button with selected item
+            function updateButton(item) {
+                const imgSrc = item.getAttribute('data-img');
+                const text = item.textContent.trim();
+                toggleText.textContent = text;
+            }
+
+            // Set the first item as active by default
+            const firstItem = items[0];
+            firstItem.classList.add('active');
+            updateButton(firstItem);
+
+            // Toggle dropdown menu visibility
+            toggleButton.addEventListener('click', function () {
+                menu.classList.toggle('show');
+            });
+
+            // Handle item selection
+            items.forEach(item => {
+                item.addEventListener('click', function () {
+                    // Remove 'active' class from all items
+                    items.forEach(i => i.classList.remove('active'));
+                    // Add 'active' class to clicked item
+                    this.classList.add('active');
+
+                    // Update button with the selected item's image and text
+                    updateButton(this);
+
+                    // Hide the dropdown menu
+                    menu.classList.remove('show');
+                });
+            });
+
+            // Hide dropdown menu if clicked outside
+            document.addEventListener('click', function (event) {
+                if (!toggleButton.contains(event.target) && !menu.contains(event.target)) {
+                    menu.classList.remove('show');
+                }
+            });
+        });
+    </script>
+
+    <script>
+        document.getElementById("upload").addEventListener("click", function () {
+            let promptData = document.querySelector("#promptData").innerHTML
+            document.querySelector("#promptInput").value = promptData
+            let onScreenCVS = document.querySelector("#canvas canvas");
+            onScreenCVS.toBlob(function (blob) {
+                let file = new File([blob], "canvas_image.png", { type: 'image/png' });
+                let fileInput = document.getElementById('id_image');
+                let dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+
+
+                document.querySelector("#genImageBtn").click();
+
+            })
+        })
+        // function dataURLToBlob(dataURL) {
+        //     let binary = atob(dataURL.split(',')[1]);
+        //     let array = [];
+        //     for (let i = 0; i < binary.length; i++) {
+        //         array.push(binary.charCodeAt(i));
+        //     }
+        //     return new Blob([new Uint8Array(array)], { type: 'image/png' });
+        // }
+
+
+
+
+
+        $(document).ready(function () {
+            let onScreenCVS = document.querySelector("#canvas canvas");
+
+            function dataURLToBlob(dataURL) {
+                let binary = atob(dataURL.split(',')[1]);
+                let array = [];
+                for (let i = 0; i < binary.length; i++) {
+                    array.push(binary.charCodeAt(i));
+                }
+                return new Blob([new Uint8Array(array)], { type: 'image/png' });
+            }
+
+            $("#upload").click(function () {
+                let dataURL = onScreenCVS.toDataURL("image/png");
+                let blob = dataURLToBlob(dataURL);
+
+                let formData = new FormData();
+                formData.append('image', blob, 'canvas_image.png');
+
+                // $.ajax({
+                //     url: '/upload/',
+                //     type: 'POST',
+                //     data: formData,
+                //     processData: false,
+                //     contentType: false,
+                //     headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                //     success: function (response) {
+                //         alert("Image uploaded successfully!");
+                //     },
+                //     error: function (xhr, status, error) {
+                //         console.error("Image upload failed: ", status, error);
+                //     }
+                // });
+            });
+        });
+    </script>
+</body>
+
+</html>
