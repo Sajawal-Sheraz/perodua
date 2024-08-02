@@ -132,32 +132,44 @@ STATIC_ROOT = os.path.join(BASE_DIR, "assets")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR / "media")
 
+from decouple import Csv, config
+
+# Logging
+LOG_DIR = "logs"
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+
+LOG_HANDLERS = config("LOG_HANDLERS", default="file").split(",")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
         "file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": ROOT_DIR / "output.log",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOG_DIR, "eccounting.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
     },
-    "root": {
-        "handlers": ["console", "file"],
-        "level": "DEBUG",
+    "formatters": {
+        "verbose": {
+            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
+        },
     },
     "loggers": {
-        "django": {
-            "handlers": ["console", "file"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            "propagate": False,
+        "": {
+            "handlers": LOG_HANDLERS,
+            "level": "DEBUG",
         },
     },
 }
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
