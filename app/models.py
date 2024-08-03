@@ -41,3 +41,7 @@ class ImagegenModel(models.Model):
 class AiImageGen(models.Model):
     user_image = models.FileField(upload_to="uploads/")
     ai_image_url = models.URLField(blank=True, null=True)
+    ai_image_qr = models.FileField(upload_to="ai_gen_qr/")
+
+    def __str__(self) -> str:
+        return f"This is the object {self.id}"

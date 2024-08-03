@@ -345,3 +345,26 @@ img {
   font-weight: 600;
   text-align: center;
 }
+
+.draw-sketch .right-panel .pick-style {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+}
+
+.draw-sketch .right-panel .pick-style div {
+  width: 100px;
+  padding: 10px;
+  background: #555353;
+  color: #fff;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  user-select: none;
+}
+.draw-sketch .right-panel .pick-style div.active {
+  border: 2px solid #fff;
+}

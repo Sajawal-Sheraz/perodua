@@ -27,25 +27,95 @@
             /* Hide the image initially */
         }
     </style>
+    <style>
+        .loader-div {
+            position: fixed;
+            z-index: 1000;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            background: #242525f5;
+            display: none;
+        }
+
+        .loader-div h2 {
+            color: #25b09b;
+        }
+
+
+        .loader-div.active {
+            display: flex;
+
+        }
+
+        .loader {
+            width: 100px;
+            aspect-ratio: 1;
+            display: grid;
+            border: 4px solid #0000;
+            border-radius: 50%;
+            border-right-color: #25b09b;
+            animation: l15 1s infinite linear;
+        }
+
+        .loader::before,
+        .loader::after {
+            content: "";
+            grid-area: 1/1;
+            margin: 2px;
+            border: inherit;
+            border-radius: 50%;
+            animation: l15 2s infinite;
+        }
+
+        .loader::after {
+            margin: 8px;
+            animation-duration: 3s;
+        }
+
+        @keyframes l15 {
+            100% {
+                transform: rotate(1turn)
+            }
+        }
+    </style>
 </head>
 
 <body>
+
+    <div class="loader-div">
+        <div class="loader"></div>
+        <h2>Please wait, Your image is coming up.</h2>
+    </div>
+    {% if obj %}
+    {% else %}
     <div class="landing-screen">
         <img src="{% static 'images/white-logo.png' %}" alt="">
         <h2>Welcome to AI Sketch</h2>
         <a href="#drawPanel">Start</a>
     </div>
+
     <hr>
+    {% endif %}
+
     <div class="draw-sketch" id="drawPanel">
         <div class="left-panel">
             <img src="{% static 'images/white-logo.png' %}" alt="">
-            {% if ai_image_url %}
+
+
+            {% if obj %}
             <h2>Scan the QR code to download the image</h2>
             <div class="qr-container">
+                <img src="{{obj.ai_image_qr.url}}" alt="">
             </div>
             {% endif %}
 
-            <script>
+
+            <!-- <script>
                 let qr_container = document.querySelector(".qr-container");
                 let canvas_w = qr_container.clientWidth || 200;
                 let canvas_h = qr_container.clientHeight || 200;
@@ -59,7 +129,7 @@
                 // Append the canvas to the qr-container
                 qr_container.appendChild(canvas);
 
-                const url = "{{ai_image_url}}";
+                const url = "";
 
                 QRCode.toCanvas(canvas, url, {
                     width: canvas_w,
@@ -68,20 +138,19 @@
                     if (error) console.error(error);
                     console.log('QR code successfully generated!');
                 });
-            </script>
+            </script> -->
         </div>
         <div class="center-panel">
             {% if images %}
             <div class="ai-images">
                 {% for i in images %}
                 {% with img=i %}
-                <img src="{{ img.url }}" />
+                <img id="ai_image_gen" src="{{ img.url }}" />
                 {% endwith %}
                 {% endfor %}
             </div>
-            {% else %}
-            <div id="canvas"></div>
             {% endif %}
+            <div id="canvas" {% if images %} style="display: none;" {% endif %}></div>
 
             <div class="tool-panel">
                 <div id="tools">
@@ -347,11 +416,13 @@
             </script>
         </div>
         <div class="right-panel">
-            <h3>Create</h3>
-            <hr>
-            <p>Choose your prompt from list</p>
+            <center>
+                <h3>Choose your style</h3>
+            </center>
+            <!-- <hr>
+            <p>Choose your prompt from list</p> -->
             <div class="style">
-                <div class="dropdown">
+                <!-- <div class="dropdown">
                     <button class="dropdown-toggle">
                         <span class="dropdown-toggle-text" id="promptData">Select Style</span>
                     </button>
@@ -364,7 +435,7 @@
                         <li>Car Adventure! Draw a car, send it to us, and see it become a sports car or SUV!</li>
                         <li>Your Car, Our Magic! Draw a car, send it, and we'll make it a sports car or SUV!</li>
                     </ul>
-                </div>
+                </div> -->
                 <!-- <div class="dropdown">
                     <button class="dropdown-toggle">
                         <img src="{% static 'images/p1.jpeg' %}" alt="" class="dropdown-toggle-img">
@@ -378,7 +449,57 @@
                     </ul>
                 </div> -->
             </div>
-            <br>
+            <hr>
+            <div class="pick-style style1">
+                <div class="option1 active" onclick="natural_btn(this)">Natural</div>
+                <div class="option2" onclick="vivid_btn(this)">Vivid</div>
+            </div>
+            <hr>
+            <div class="pick-style style2">
+                <div class="option3 active" onclick="fun_btn(this)">Fun</div>
+                <div class="option4" onclick="color_btn(this)">Colorful</div>
+                <div class="option5" onclick="futurist_btn(this)">Futuristic</div>
+            </div>
+            <hr>
+            <div class="pick-style ">
+                <div class="option3">Option 1</div>
+                <div class="option4">Option 2</div>
+                <div class="option5">Option 3</div>
+            </div>
+            <script>
+                function natural_btn() {
+                    document.querySelector(".option1").classList.remove("active")
+                    document.querySelector(".option2").classList.remove("active")
+                    document.querySelector(".option1").classList.add("active")
+                }
+                function vivid_btn() {
+                    document.querySelector(".option1").classList.remove("active")
+                    document.querySelector(".option2").classList.remove("active")
+                    document.querySelector(".option2").classList.add("active")
+                }
+                function fun_btn() {
+                    document.querySelector(".option3").classList.remove("active")
+                    document.querySelector(".option4").classList.remove("active")
+                    document.querySelector(".option5").classList.remove("active")
+                    document.querySelector(".option3").classList.add("active")
+
+                }
+                function color_btn() {
+                    document.querySelector(".option3").classList.remove("active")
+                    document.querySelector(".option4").classList.remove("active")
+                    document.querySelector(".option5").classList.remove("active")
+                    document.querySelector(".option4").classList.add("active")
+
+                }
+                function futurist_btn() {
+                    document.querySelector(".option3").classList.remove("active")
+                    document.querySelector(".option4").classList.remove("active")
+                    document.querySelector(".option5").classList.remove("active")
+                    document.querySelector(".option5").classList.add("active")
+
+                }
+
+            </script>
             <hr>
             <div class="submit-box">
                 <h2>Are you ready to submit?</h2>
@@ -394,6 +515,8 @@
         {% csrf_token %}
         <input type="file" name="image" id="id_image">
         <input type="text" name="prompt" id="promptInput">
+        <input type="text" name="style" id="styleInput">
+        <input type="text" name="style2" id="style2Input">
 
         <button type="submit" id="genImageBtn">Generate 3D Image</button>
     </form>
@@ -464,7 +587,12 @@
 
     <script>
         document.getElementById("upload").addEventListener("click", function () {
-            let promptData = document.querySelector("#promptData").innerHTML
+            // let promptData = document.querySelector("#promptData").innerHTML
+            promptData = ""
+            let styleData = document.querySelector(".style1 .active").innerHTML
+            let style2Data = document.querySelector(".style2 .active").innerHTML
+            document.querySelector("#styleInput").value = styleData
+            document.querySelector("#style2Input").value = style2Data
             document.querySelector("#promptInput").value = promptData
             let onScreenCVS = document.querySelector("#canvas canvas");
             onScreenCVS.toBlob(function (blob) {
@@ -478,6 +606,9 @@
                 document.querySelector("#genImageBtn").click();
 
             })
+
+
+            document.querySelector(".loader-div").classList.add("active")
         })
         // function dataURLToBlob(dataURL) {
         //     let binary = atob(dataURL.split(',')[1]);
