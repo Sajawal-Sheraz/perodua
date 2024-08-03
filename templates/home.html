@@ -16,6 +16,416 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <style>
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;700;800;900&display=swap");
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            text-decoration: none;
+            list-style: none;
+            font-family: "Inter", sans-serif;
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        :root {
+            --dark: #222222;
+            --light: #ffffff;
+            --success: #0abf30;
+            --error: #e24d4c;
+            --warning: #e9bd0c;
+            --info: #3498db;
+        }
+
+        body {
+            background: #fff;
+        }
+
+        a {
+            text-decoration: none !important;
+        }
+
+        a:hover {
+            text-decoration: none !important;
+        }
+
+        img {
+            width: 100%;
+        }
+
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /*<!========---# Landing Screen ----=======>*/
+        .landing-screen {
+            width: 100%;
+            height: 100vh;
+            background: var(--dark);
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            gap: 40px;
+            justify-content: center;
+        }
+
+        .landing-screen img {
+            width: 300px;
+        }
+
+        .landing-screen h2 {
+            font-size: 72px;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        .landing-screen a {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--light);
+            border: 3px solid var(--light);
+            padding: 10px 25px;
+            border-radius: 30px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .landing-screen a:hover {
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        /*<!========---# Draw Sketch ----=======>*/
+        .draw-sketch {
+            background: var(--dark);
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .draw-sketch .right-panel,
+        .draw-sketch .left-panel {
+            width: 18%;
+            height: 80vh;
+            background: #333333;
+        }
+
+        .draw-sketch .center-panel {
+            width: 55%;
+            height: 60vh;
+            position: relative;
+        }
+
+        .draw-sketch .center-panel canvas {
+            width: 500px;
+            height: 500px;
+        }
+
+        .draw-sketch .center-panel .tool-panel {
+            width: 70%;
+            left: 15%;
+            position: absolute;
+            overflow: hidden;
+            bottom: 100%;
+            top: -100px;
+            height: 70px;
+            background: #333333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .draw-sketch .center-panel .tool-panel #tools {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .draw-sketch .center-panel .tool-panel .tool i {
+            font-size: 30px;
+        }
+
+        .draw-sketch .center-panel .tool-panel .tool {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .draw-sketch .center-panel .tool-panel .tool.tool-selected {
+            background: #3498db;
+        }
+
+        .draw-sketch .center-panel .tool-panel #color-input {}
+
+        .draw-sketch .center-panel .tool-panel #size-picker,
+        .draw-sketch .center-panel .tool-panel #color-picker {
+            display: none;
+        }
+
+        .draw-sketch .center-panel .ai-images {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .draw-sketch .center-panel .ai-images img {
+            object-fit: contain;
+            object-position: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .draw-sketch .center-panel .btn-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px 0;
+            width: 100%;
+        }
+
+        .draw-sketch .center-panel .refresh-btn {
+            width: fit-content;
+            padding: 10px 20px;
+            margin: 0 auto;
+            border: 3px solid var(--light);
+            border-radius: 20px;
+            color: var(--light);
+        }
+
+        .draw-sketch .center-panel .refresh-btn:hover {
+            background: var(--light);
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        /*<!========---# Right panel ----=======>*/
+
+        .draw-sketch .right-panel {
+            background: #333333;
+            border-radius: 10px;
+        }
+
+        .draw-sketch .right-panel h3 {
+            padding: 20px;
+            color: var(--light);
+            font-size: 22px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .draw-sketch .right-panel p {
+            padding: 20px;
+            color: var(--light);
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .draw-sketch .right-panel .prompts {
+            padding: 10px 20px;
+            width: 100%;
+            height: 200px;
+            position: relative;
+            display: flex;
+            align-content: center;
+            gap: 5px;
+        }
+
+        .draw-sketch .right-panel .prompts li {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 3px solid transparent;
+            cursor: pointer;
+        }
+
+        .draw-sketch .right-panel .prompts li.active {
+            border: 3px solid #3498db;
+        }
+
+        .draw-sketch .right-panel .prompts li img {
+            object-fit: cover;
+            object-position: center;
+            height: 100%;
+        }
+
+        .draw-sketch .right-panel .style {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .draw-sketch .right-panel .style ul {
+            position: relative;
+        }
+
+        .draw-sketch .right-panel .style ul li {
+            display: flex;
+            align-items: center;
+        }
+
+        .draw-sketch .right-panel .style ul li img {
+            width: 25px;
+            height: 25px;
+        }
+
+        .draw-sketch .right-panel .style {
+            padding: 10px 20px;
+        }
+
+        .draw-sketch .right-panel .style span {
+            color: #f2f2f2;
+        }
+
+        .draw-sketch .right-panel .style .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .draw-sketch .right-panel .style .dropdown-toggle {
+            color: white;
+            padding: 6px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            background: #555353;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .draw-sketch .right-panel .style img {
+            width: 20px;
+            height: 20px;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .draw-sketch .right-panel .style .dropdown-menu {
+            display: none;
+            /* Hide menu by default */
+            position: absolute;
+            background: #555353;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .draw-sketch .right-panel .style .dropdown-menu li {
+            padding: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .draw-sketch .right-panel .style .dropdown-menu li img {
+            vertical-align: middle;
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .draw-sketch .right-panel .style .dropdown-menu li.active {
+            background-color: #ddd;
+            /* Highlight active item */
+        }
+
+        .draw-sketch .right-panel .style .dropdown-menu li:hover {
+            background-color: #f1f1f1;
+        }
+
+        .draw-sketch .right-panel .style .dropdown-menu.show {
+            display: block;
+            /* Show menu when class 'show' is added */
+        }
+
+        .draw-sketch .right-panel .submit-box {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .draw-sketch .right-panel .submit-box h2 {
+            font-size: 20px;
+            color: #f1f1f1;
+        }
+
+        .draw-sketch .right-panel .submit-box .tool {
+            padding: 8px 20px;
+            border-radius: 20px;
+            width: 150px;
+            margin: 0 auto;
+            border: 3px solid var(--light);
+            color: var(--light);
+            margin-top: 20px;
+        }
+
+        .draw-sketch .right-panel .submit-box .tool:hover {
+            background: var(--light);
+            color: #222222;
+            cursor: pointer;
+        }
+
+        .draw-sketch .left-panel {
+            padding: 24px;
+        }
+
+        .draw-sketch .qr-container {
+            height: 300px;
+            display: block;
+        }
+
+        .draw-sketch .qr-container #qrcode {
+            width: 150px;
+        }
+
+        .draw-sketch .left-panel h2 {
+            font-size: 22px;
+            color: var(--light);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .draw-sketch .right-panel .pick-style {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .draw-sketch .right-panel .pick-style div {
+            width: 100px;
+            padding: 10px;
+            background: #555353;
+            color: #fff;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            user-select: none;
+        }
+
+        .draw-sketch .right-panel .pick-style div.active {
+            border: 2px solid #fff;
+        }
+    </style>
+    <style>
         .qr-container {
             text-align: center;
             margin-top: 20px;
