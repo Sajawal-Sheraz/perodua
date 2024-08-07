@@ -195,7 +195,7 @@
             width: 100%;
         }
 
-        .draw-sketch .center-panel .refresh-btn {
+        .draw-sketch .refresh-btn {
             width: fit-content;
             padding: 10px 20px;
             margin: 0 auto;
@@ -204,10 +204,17 @@
             color: var(--light);
         }
 
-        .draw-sketch .center-panel .refresh-btn:hover {
+        .draw-sketch .refresh-btn:hover {
             background: var(--light);
             color: var(--dark);
             font-weight: 600;
+        }
+
+        .custom-prompts textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+            padding: 10px;
         }
 
         /*<!========---# Right panel ----=======>*/
@@ -856,12 +863,12 @@
             <div class="pick-style style2">
                 <div class="option3 active" onclick="fun_btn(this)">Fun</div>
                 <div class="option4" onclick="color_btn(this)">Colorful</div>
-                <div class="option5" onclick="futurist_btn(this)">Futuristic</div>
+                <div class="option5" onclick="futurist_btn(this)">Photo Realistic</div>
             </div>
             <hr>
             <div class="pick-style ">
-                <div class="option3">Child’s Sketch</div>
-                <div class="option4">Option 1</div>
+                <div class="option3">Option 1</div>
+                <div class="option4">Option 2</div>
             </div>
             <script>
                 function natural_btn() {
