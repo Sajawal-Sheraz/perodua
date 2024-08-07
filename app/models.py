@@ -45,3 +45,10 @@ class AiImageGen(models.Model):
 
     def __str__(self) -> str:
         return f"This is the object {self.id}"
+
+
+class Prompt(models.Model):
+    user_prompt = models.TextField(blank=True, null=True)
+
+    def __str__(self) -> str:
+        return f"{self.user_prompt}"

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.shortcuts import render
 
-from app.models import AiImageGen, ImagegenModel
+from app.models import AiImageGen, ImagegenModel, Prompt
 
 from .openai_client import generate_image
 from .settings import FILE_UPLOAD_MAX_MEMORY_SIZE
@@ -29,14 +29,26 @@ def imagegen(request):
     if request.method == "POST":
         try:
             img = request.FILES["image"].read()
-            images = generate_image(
-                img,
-                request.POST.get("prompt", ""),
-                "hd",
-                "1792x1024",
-                request.POST.get("style", "").lower(),
-                request.POST.get("style2", "").lower(),
-            )
+            if request.POST.get("testInput", False):
+                images = generate_image(
+                    img,
+                    request.POST.get("prompt", ""),
+                    "hd",
+                    "1792x1024",
+                    request.POST.get("style", "").lower(),
+                    request.POST.get("style2", "").lower(),
+                    request.POST.get("user_prompt", ""),
+                )
+            else:
+                images = generate_image(
+                    img,
+                    request.POST.get("prompt", ""),
+                    "hd",
+                    "1792x1024",
+                    request.POST.get("style", "").lower(),
+                    request.POST.get("style2", "").lower(),
+                    Prompt.objects.first().user_prompt,
+                )
             image_object = images[0]
             ai_image_url = image_object.url
             url = ai_image_url
@@ -68,11 +80,24 @@ def imagegen(request):
 
             # Remove the temporary QR code image file
             os.remove(qr_img_path)
+
+            if request.POST.get("testInput", False):
+                return render(
+                    request,
+                    "dashboard.html",
+                    {
+                        "images": images,
+                        "ai_image_url": url,
+                        "obj": obj,
+                        "user_prompt": request.POST.get("user_prompt", ""),
+                    },
+                )
             return render(
                 request,
                 "home.html",
                 {"images": images, "ai_image_url": url, "obj": obj},
             )
+
         except Exception as e:
             print(f"There is something wrong: {e}")
             return render(request, "home.html")
@@ -81,3 +106,13 @@ def imagegen(request):
 
 def index(request):
     return render(request, "home.html")
+
+
+def dashboard(request):
+    return render(request, "dashboard.html")
+
+
+def save_prompt(request):
+    Prompt.objects.all().delete()
+    Prompt.objects.create(user_prompt=request.GET.get("user_prompt"))
+    return render(request, "dashboard.html")

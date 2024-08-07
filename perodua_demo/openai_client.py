@@ -48,7 +48,7 @@ def get_image_description(image, prompt):
     return gen_prompt, description
 
 
-def generate_image(image, prompt, quality, size, style, style2):
+def generate_image(image, prompt, quality, size, style, style2, user_prompt):
     assert type(image) is bytes
     image_bytes = BytesIO(image)
     # with open(
@@ -72,9 +72,10 @@ def generate_image(image, prompt, quality, size, style, style2):
         f"Using context from this info, '{desc}' generate a new image with the prompt as follows: {prompt} {prompt_detailed}. It is IMPORTANT that the requirements from the NEW PROMPT are followed with {style} style!",
     )
     new_prompt = f"Generate a real looking vehicle accurately from this sketch '{desc}' with detailed realism while preserving the original style. Featuring a sleek and aerodynamic design with advanced features and a modern aesthetic as follows '{prompt}',The name of manufacturer is PERODUA and ensure PERODUA word shows in image, and the overall look is enhanced with a realistic background and lighting, embodying innovation and cutting-edge technology. There must be no text in the image. Add colors where it best suits the vehicle.  It is IMPORTANT that the Perodua word is displayed in background and requirements from the  NEW PROMPT are followed with {style} style!"
+    print("user_prompt", user_prompt)
     result = __OPENAI_CLIENT.images.generate(
         model="dall-e-3",
-        prompt=f"Use dall-e to analyse this description '{desc}', and create very realistic object with it, which should look real and add style should be '{style}'. Also add '{style2}' ",
+        prompt=f"{user_prompt}. description is '{desc}', and style should be '{style}', '{style2}'",
         size=size,
         quality=quality,
         n=1,  # dall-e-3 n must be 1

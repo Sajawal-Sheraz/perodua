@@ -27,6 +27,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("imagegen/", views.imagegen, name="imagegen"),
     path("", views.index, name="index"),
+    path("dashboard/", views.dashboard, name="dashboard"),
+    path("save-prompt/", views.save_prompt, name="save-prompt"),
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
 ]
 

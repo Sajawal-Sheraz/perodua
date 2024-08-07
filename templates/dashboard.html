@@ -501,22 +501,9 @@
         <div class="loader"></div>
         <h2>Please wait, Your image is coming up.</h2>
     </div>
-    {% if obj %}
-    {% else %}
-    <div class="landing-screen">
-        <img src="{% static 'images/white-logo.png' %}" alt="">
-        <h2>Welcome to AI Sketch</h2>
-        <a href="#drawPanel">Start</a>
-    </div>
-
-    <hr>
-    {% endif %}
-
     <div class="draw-sketch" id="drawPanel">
         <div class="left-panel">
             <img src="{% static 'images/white-logo.png' %}" alt="">
-
-
             {% if obj %}
             <h2>Scan the QR code to download the image</h2>
             <div class="qr-container">
@@ -611,9 +598,10 @@
 
                 </div>
             </div>
-            <div class="btn-box">
-                <a href="/" class="refresh-btn">Refresh</a>
+            <div class="custom-prompts">
+                <textarea id="user_prompt" placeholder="Enter Prompt">{{user_prompt}}</textarea>
             </div>
+
             <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js'></script>
             <script>
                 /*** GUI Part ***/
@@ -826,8 +814,6 @@
             </script>
         </div>
         <div class="right-panel">
-            {% if obj %}
-            {% else %}
             <center>
                 <h3>Choose your style</h3>
             </center>
@@ -917,7 +903,11 @@
                 <div class="tool" id="upload">Upload</div>
 
             </div>
-            {% endif %}
+            <div class="submit-box">
+                <a href="/dashboard/" class="refresh-btn">Refresh</a>
+                <a onclick="save_prompt()" class="refresh-btn">Save Prompt</a>
+
+            </div>
         </div>
     </div>
 
@@ -927,7 +917,8 @@
         <input type="text" name="prompt" id="promptInput">
         <input type="text" name="style" id="styleInput">
         <input type="text" name="style2" id="style2Input">
-
+        <textarea name="user_prompt" id="userPromptInput"></textarea>
+        <input type="radio" name="testInput" checked>
         <button type="submit" id="genImageBtn">Generate 3D Image</button>
     </form>
 
@@ -1001,9 +992,11 @@
             promptData = ""
             let styleData = document.querySelector(".style1 .active").innerHTML
             let style2Data = document.querySelector(".style2 .active").innerHTML
+            let promptInput = document.querySelector("#user_prompt").value
             document.querySelector("#styleInput").value = styleData
             document.querySelector("#style2Input").value = style2Data
             document.querySelector("#promptInput").value = promptData
+            document.querySelector("#userPromptInput").value = promptInput
             let onScreenCVS = document.querySelector("#canvas canvas");
             onScreenCVS.toBlob(function (blob) {
                 let file = new File([blob], "canvas_image.png", { type: 'image/png' });
@@ -1068,6 +1061,24 @@
                 // });
             });
         });
+
+
+        function save_prompt() {
+            let promptInput = document.querySelector("#user_prompt").value
+
+            console.log(promptInput)
+            let url = "{% url 'save-prompt' %}"
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: {
+                    "user_prompt": promptInput,
+                },
+                success: function (data) {
+                    alert("Prompt saved successfully")
+                }
+            });
+        }
     </script>
 </body>
 
